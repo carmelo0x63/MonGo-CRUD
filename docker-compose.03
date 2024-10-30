@@ -1,0 +1,39 @@
+services:
+  svc_mongodb:
+    image: mongo:8
+    container_name: c_mongodb
+    hostname: mongodb
+#    ports:
+#      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./init-mongodb:/docker-entrypoint-initdb.d:ro
+      - ./init-mongodb/data:/tmp/data:ro
+    networks:
+      - backend
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+
+  svc_api:
+    build: 
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: c_api 
+    hostname: api
+    ports:
+      - "8080:8080"
+    depends_on:
+      - svc_mongodb
+    networks:
+      - backend
+    environment:
+      MONGO_URI: "mongodb://dbuser:pass123@mongodb:27017"
+
+volumes:
+  mongodb_data:
+    name: mongodb_data
+
+networks:
+  backend:
+    name: backend
