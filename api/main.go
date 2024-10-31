@@ -57,7 +57,15 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println(databases)
+	outputMsg := "Available databases ("
+	outputMsg += strconv.Itoa(len(databases)) + "): "
+	for _, db := range list[:len(databases)-1] {
+		outputMsg += db + ", "
+	}
+	outputMsg += list[len(databases)-1]
+	log.Print(outputMsg)
+
+	//	log.Println(databases)
 
 	collection = client.Database("Movies").Collection("moviesList")
 
