@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -64,8 +65,6 @@ func main() {
 	}
 	outputMsg += list[len(databases)-1]
 	log.Print(outputMsg)
-
-	//	log.Println(databases)
 
 	collection = client.Database("Movies").Collection("moviesList")
 
