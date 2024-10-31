@@ -51,6 +51,16 @@ func main() {
 		log.Fatal(err)
 	}
 
+	cursor, err := collection.Find(ctx, bson.M{})
+	if err != nil {
+		log.Fatal(err)
+	}
+	var movies []bson.M
+	if err = cursor.All(ctx, &movies); err != nil {
+		log.Fatal(err)
+	}
+	log.Println(movies)
+
 	collection = client.Database("Movies").Collection("moviesList")
 	log.Println("Connected to MongoDB: " + mongoURI)
 
