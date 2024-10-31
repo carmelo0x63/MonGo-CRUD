@@ -1,7 +1,7 @@
 services:
-  mongodb:
+  svc_mongodb:
     image: mongo:8
-    container_name: mongodb
+    container_name: c_mongodb
     hostname: mongodb
     ports:
       - "27017:27017"

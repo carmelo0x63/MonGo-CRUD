@@ -51,15 +51,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	cursor, err := collection.Find(ctx, bson.M{})
+	databases, err := client.ListDatabaseNames(ctx, bson.M{})
 	if err != nil {
 		log.Fatal(err)
 	}
-	var movies []bson.M
-	if err = cursor.All(ctx, &movies); err != nil {
-		log.Fatal(err)
-	}
-	log.Println(movies)
+	log.Println(databases)
 
 	collection = client.Database("Movies").Collection("moviesList")
 	log.Println("Connected to MongoDB: " + mongoURI)
