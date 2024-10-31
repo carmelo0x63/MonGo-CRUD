@@ -51,6 +51,8 @@ func main() {
 		log.Fatal(err)
 	}
 
+	log.Println("Connected to MongoDB: " + mongoURI)
+
 	databases, err := client.ListDatabaseNames(ctx, bson.M{})
 	if err != nil {
 		log.Fatal(err)
@@ -58,7 +60,6 @@ func main() {
 	log.Println(databases)
 
 	collection = client.Database("Movies").Collection("moviesList")
-	log.Println("Connected to MongoDB: " + mongoURI)
 
 	// Setup router
 	r := mux.NewRouter()
