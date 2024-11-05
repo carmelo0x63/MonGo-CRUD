@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div id="app" class="container mx-auto px-4 py-8">
+        <div id="auth-section" class="mb-8">
+            <div id="login-form" class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-2xl font-bold mb-4">Login</h2>
+                <form id="login" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Username</label>
+                        <input type="text" id="username" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Password</label>
+                        <input type="password" id="password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600">
+                        Login
+                    </button>
+                </form>
+                <div class="mt-4">
+                    <button id="show-register" class="text-blue-500 hover:text-blue-600">
+                        Need an account? Register here
+                    </button>
+                </div>
+            </div>
+
+            <div id="register-form" class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md hidden">
+                <h2 class="text-2xl font-bold mb-4">Register</h2>
+                <form id="register" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Username</label>
+                        <input type="text" id="reg-username" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Password</label>
+                        <input type="password" id="reg-password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                    <button type="submit" class="w-full bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600">
+                        Register
+                    </button>
+                </form>
+                <div class="mt-4">
+                    <button id="show-login" class="text-blue-500 hover:text-blue-600">
+                        Already have an account? Login here
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="content-section" class="hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold">Document Manager</h1>
+                <button id="logout" class="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600">
+                    Logout
+                </button>
+            </div>
+
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold mb-4">Create New Document</h2>
+                <form id="document-form" class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700">Document Data (JSON)</label>
+                        <textarea id="document-data" rows="4" 
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+                    </div>
+                    <button type="submit" class="bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600">
+                        Create Document
+                    </button>
+                </form>
+            </div>
+
+            <div>
+                <h2 class="text-2xl font-bold mb-4">Documents</h2>
+                <div id="documents-list" class="space-y-4">
+                    <!-- Documents will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let token = localStorage.getItem('token');
+        const API_URL = 'http://localhost:8080';
+
+        // Show/hide sections based on auth state
+        function updateAuthState() {
+            const authSection = document.getElementById('auth-section');
+            const contentSection = document.getElementById('content-section');
+            
+            if (token) {
+                authSection.classList.add('hidden');
+                contentSection.classList.remove('hidden');
+                loadDocuments();
+            } else {
+                authSection.classList.remove('hidden');
+                contentSection.classList.add('hidden');
+            }
+        }
+
+        // Toggle between login and register forms
+        document.getElementById('show-register').addEventListener('click', () => {
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('register-form').classList.remove('hidden');
+        });
+
+        document.getElementById('show-login').addEventListener('click', () => {
+            document.getElementById('register-form').classList.add('hidden');
+            document.getElementById('login-form').classList.remove('hidden');
+        });
+
+        // Register form handler
+        document.getElementById('register').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('reg-username').value;
+            const password = document.getElementById('reg-password').value;
+
+            try {
+                const response = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (response.ok) {
+                    alert('Registration successful! Please login.');
+                    document.getElementById('show-login').click();
+                } else {
+                    alert('Registration failed');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                alert('Registration failed');
+            }
+        });
+
+        // Login form handler
+        document.getElementById('login').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    token = data.token;
+                    localStorage.setItem('token', token);
+                    updateAuthState();
+                } else {
+                    alert('Login failed');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Login failed');
+            }
+        });
+
+        // Logout handler
+        document.getElementById('logout').addEventListener('click', () => {
+            token = null;
+            localStorage.removeItem('token');
+            updateAuthState();
+        });
+
+        // Create document handler
+        document.getElementById('document-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const documentData = document.getElementById('document-data').value;
+
+            try {
+                const response = await fetch(`${API_URL}/api/documents`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ data: JSON.parse(documentData) })
+                });
+
+                if (response.ok) {
+                    document.getElementById('document-data').value = '';
+                    loadDocuments();
+                } else {
+                    alert('Failed to create document');
+                }
+            } catch (error) {
+                console.error('Create document error:', error);
+                alert('Failed to create document');
+            }
+        });
+
+        // Load and display documents
+        async function loadDocuments() {
+            try {
+                const response = await fetch(`${API_URL}/api/documents`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const documents = await response.json();
+                    const documentsList = document.getElementById('documents-list');
+                    documentsList.innerHTML = documents.map(doc => `
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <pre class="text-sm">${JSON.stringify(doc.data, null, 2)}</pre>
+                                    <div class="mt-2 text-sm text-gray-500">
+                                        Created: ${new Date(doc.created).toLocaleString()}
+                                    </div>
+                                </div>
+                                <div class="ml-4 space-y-2">
+                                    <button onclick="editDocument('${doc.id}')" 
+                                        class="block w-full bg-blue-500 text-white py-1 px-3 rounded-md hover:bg-blue-600">
+                                        Edit
+                                    </button>
+                                    <button onclick="deleteDocument('${doc.id}')" 
+                                        class="block w-full bg-red-500 text-white py-1 px-3 rounded-md hover:bg-red-600">
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Load documents error:', error);
+            }
+        }
+
+        // Edit document handler
+        async function editDocument(id) {
+            const newData = prompt('Enter new document data (JSON):');
+            if (!newData) return;
+
+            try {
+                const response = await fetch(`${API_URL}/api/documents/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ data: JSON.parse(newData) })
+                });
+
+                if (response.ok) {
+                    loadDocuments();
+                } else {
+                    alert('Failed to update document');
+                }
+            } catch (error) {
+                console.error('Update document error:', error);
+                alert('Failed to update document');
+            }
+        }
+
+        // Delete document handler
+        async function deleteDocument(id) {
+            if (!confirm('Are you sure you want to delete this document?')) return;
+
+            try {
+                const response = await fetch(`${API_URL}/api/documents/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    loadDocuments();
+                } else {
+                    alert('Failed to delete document');
+                }
+            } catch (error) {
+                console.error('Delete document error:', error);
+                alert('Failed to delete document');
+            }
+        }
+
+        // Initialize auth state
+        updateAuthState();
+    </script>
+</body>
+</html>
