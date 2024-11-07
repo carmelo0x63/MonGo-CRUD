@@ -1,4 +1,4 @@
-module quickstart
+module api 
 
 go 1.23
 
